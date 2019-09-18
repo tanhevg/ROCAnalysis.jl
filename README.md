@@ -12,9 +12,9 @@ Pkg.add("ROCAnalysis")
 Introduction
 ------------
 
-Receiver Operating Characteristic Analysis functions for evaluation probabilistic binary classifiers.   Allows efficient plotting of ROC curves, and many more things. 
+Receiver Operating Characteristic Analysis functions for evaluation probabilistic binary classifiers.   Allows efficient plotting of ROC curves, and many more things.
 
-Please note there is an alternative implementation under [a similar name](https://github.com/diegozea/ROC.jl), and support for ROC analysis also exists in [MLBase](https://github.com/lindahua/MLBase.jl). 
+Please note there is an alternative implementation under [a similar name](https://github.com/diegozea/ROC.jl), and support for ROC analysis also exists in [MLBase](https://github.com/lindahua/MLBase.jl).
 
 Our implementation is more geared towards:
  - large amounts of data, with efficient ROC statistics calculation
@@ -23,7 +23,7 @@ Our implementation is more geared towards:
  - ROC convex hull computation, analysis and EER-interpretation
  - Optimal Likelihood Ratio computation
 
-The development roadmap is largely based on the functionality in a similar R package [ROC](https://github.com/davidavdav/ROC). 
+The development roadmap is largely based on the functionality in a similar R package [ROC](https://github.com/davidavdav/ROC).
 
 Synopsis
 ----
@@ -31,16 +31,16 @@ An [annotated jupyter notebook](ROCAnalysis.ipynb) of the code below can be foun
 ```julia
 using ROCAnalysis
 ## Produce some well-calibrated log-likelihood-ratio scores for target and non-target class:
-tar =  2 + 2randn(1000)
-non = -2 + 2randn(100000)
+tar =  2 .+ 2randn(1000);
+non = -2 .+ 2randn(100000);
 ## quick estimate of equal error rate, should be close to pnorm(-1) = 0.5 + 0.5erf(-1/√2)
-eer(tar, non) 
+eer(tar, non)
 ## compute full ROC statistics
 r = roc(tar, non)
 ## accurate computation of the equal error rate, using the convex hull
 eerch(r)
 ## roc plot, we plot errors (false negatives against false positives) rather than hits vs. false alarms.
-using Winston ## or perhaps another plotting package
+using Plots ## or perhaps another plotting package
 plot(r)
 ## The "Detection Error Tradeoff" plot, this should give a more/less straight line
 detplot(r)
@@ -87,7 +87,7 @@ There are of course also many different interpretations of the classes `A` and `
 - score-like: a higher value means a better match
 - distance-like: a higher value means a larger difference.
 
-Because we want to focus in this package on a probabilistic interpretation of the scalar `s`, we take the "score-like" interpretation of `s`, i.e., higher values of `s` correspond to a higher likelihood of the class-of-interest to be associated to the input of the classifier.  If your classifier is, in fact, a distance metric `d`, you could work with `s=-d` or `s=1/d` or any other strictly decreasing function.  Alternatively, you can swap around the label of the class of interest. 
+Because we want to focus in this package on a probabilistic interpretation of the scalar `s`, we take the "score-like" interpretation of `s`, i.e., higher values of `s` correspond to a higher likelihood of the class-of-interest to be associated to the input of the classifier.  If your classifier is, in fact, a distance metric `d`, you could work with `s=-d` or `s=1/d` or any other strictly decreasing function.  Alternatively, you can swap around the label of the class of interest.
 
 As the name suggests, a classifier is supposed to make decisions.  Decisions can be thesholded against a fixed `θ` such that:
 - if `s>θ`, decide class `B`
@@ -97,7 +97,7 @@ For evaluating the classifier, we need a set of supervised trials, i.e., for eac
 - false positives: `s>θ` while in fact the true label is `A`
 - false negatives: `s<θ` while in fact the true label is `B`.
 
-The _Receiver Operating Characteristic_ (ROC) is a graph that shows how the fractions of the false positives and false negatives change with varying `θ`, for a fixed set of scores `s`.  The structure of type `Roc` captures the essential information in a pre-processed way such that other quantities can be derived efficiently. 
+The _Receiver Operating Characteristic_ (ROC) is a graph that shows how the fractions of the false positives and false negatives change with varying `θ`, for a fixed set of scores `s`.  The structure of type `Roc` captures the essential information in a pre-processed way such that other quantities can be derived efficiently.
 
 Because we come from automatic speaker recognition, we tend to use the following terminology for the classes
 - *target*, the higher scores, a.k.a. same source, true client, ...
@@ -111,21 +111,21 @@ There are many different names of the error rates in different scientific discip
  - *Probability of False Alarm*: a.k.a. false alarm rate, false positive rate, false accept rate, false match rate, Type II error, 1 - true negative rate, 1- specificity
  - *Probability of Miss:*: a.k.a. miss rate, false negative rate, false reject rate, false non-match rate, Type I error, 1 - true positive rate, 1 - sensitivity, 1 - recall, 1 - verification rate, 1 - hit rate, 1 - genuine acceptance rate
 
-We foresee that the naming of things becomes a bit more flexible in future releases of this package. 
+We foresee that the naming of things becomes a bit more flexible in future releases of this package.
 
 DET plot
 -------
 
 A _detection error trade-off_ plot (Martin, 1997) is exactly the same as a ROC plot in the error domain (i.e., miss rate vs false alarm rate), but the axes have been warped according to `Φ⁻¹(x)`, the inverse of the cumulative normal distribution.  In R, this function is known as `qnorm(x)`, in Julia base this is ` √2 * erfinv(2x-1)`.  This type of plot has interesting properties
-- If the distributions of target and non-target scores are both Normal, then the DET-curve is a straight line.  In practice, many detection problems give rise to more-or-less straight DET curves, and this suggests that there exists a strictly increasing warping function that can make the score distributions (more) Normal. 
+- If the distributions of target and non-target scores are both Normal, then the DET-curve is a straight line.  In practice, many detection problems give rise to more-or-less straight DET curves, and this suggests that there exists a strictly increasing warping function that can make the score distributions (more) Normal.
 - Towards better performance (lower error rates), the resolution of the graph is higher.  This makes it more easy to have multiple systems / performance characteristics over a smaller or wider range of performance in the same graph, and still be able to tell these apart.
 - Conventionally, the ranges of the axes are chosen 0.1%--50%.  This makes it possible to immediately assess the overall performance based on the absolute position of the line in the graph if you have seen more DET plots in your life.
 - The slope of the (straight) line corresponds to the ratio of the `σ` parameters of the underlying Normal score distributions, namely that of the non-target scores divided by that of the target scores.  Often, highly discriminative classifiers show very _flat_ curves, indicating that that target scores have a much larger variance than the non-target scores.  
-- The origin of this type of plot lies in psychophysics, where graph paper with lines according to this warping was referred to as _double probability paper_.  The diagonal `y=x` in a DET plot corresponds linearly to a quantity known as `d'` (d-prime) from psychophysics, ranging from 0 at 50% error to about 6 at 0.1% error. 
+- The origin of this type of plot lies in psychophysics, where graph paper with lines according to this warping was referred to as _double probability paper_.  The diagonal `y=x` in a DET plot corresponds linearly to a quantity known as `d'` (d-prime) from psychophysics, ranging from 0 at 50% error to about 6 at 0.1% error.
 
 ### Discrete and continuous scores
 
-There is an essential difference between discrete score (classes) and continuous scores.  For the former, trials with the same scores must be grouped before the probabilities of false alarm and miss are computed.  This results in ROC and DET plots that can have line elements that are not solely horizontal or vertical.  This is contrary to the latter case if we assume that no two scores are (coincidentally)  the same, which leads to only horizontal and vertical line segments.  This `ROCAnalysis` package makes sure that the occurrence of identical scores is treated correctly by sorting target scores before identical non-target scores, and by treating trials with scores _at_ the threshold always as errors. 
+There is an essential difference between discrete score (classes) and continuous scores.  For the former, trials with the same scores must be grouped before the probabilities of false alarm and miss are computed.  This results in ROC and DET plots that can have line elements that are not solely horizontal or vertical.  This is contrary to the latter case if we assume that no two scores are (coincidentally)  the same, which leads to only horizontal and vertical line segments.  This `ROCAnalysis` package makes sure that the occurrence of identical scores is treated correctly by sorting target scores before identical non-target scores, and by treating trials with scores _at_ the threshold always as errors.
 
 ### Plot optimisation
 
@@ -158,4 +158,4 @@ We have defined the following types:
 
 Notes
 -----
-This is very much work in progress.  If you stumble upon this, please drop me a line. 
+This is very much work in progress.  If you stumble upon this, please drop me a line.

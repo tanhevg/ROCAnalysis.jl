@@ -68,7 +68,7 @@ end
     title --> "Applied Probability of Error"
     xlabel --> "prior log odds"
     ylabel --> "Bayes' error rate"
-    labels --> ["Bayes' Error", "Minimum", "Trivial"]
+    labels --> ["Bayes' Error" "Minimum" "Trivial"]
     linecolors --> [:red :green :black]
     lo = collect(xmin:0.01:xmax)
     be = ber(r, lo)
@@ -90,7 +90,7 @@ end
     title --> "Normalized Bayes' Error"
     xlabel --> "prior log odds"
     ylabel --> "normalized Bayes' error"
-    labels --> ["Bayes' Error", "Minimum BE", "False Alarms", "Misses", "Minimum FA", "Minimum miss"]
+    labels --> ["Bayes' Error" "Minimum BE" "False Alarms" "Misses" "Minimum FA" "Minimum miss"]
     leg --> :left
     linestyles --> [:solid :solid :dash :dot :dash :dot]
     linecolors --> [:red :green :red :red :green :green]
